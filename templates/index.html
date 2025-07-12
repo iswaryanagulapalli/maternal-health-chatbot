@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maternal Health Chatbot</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -2;
+      animation: slideshow 30s infinite ease-in-out;
+      transition: background-image 1s ease-in-out;
+    }
+
+    @keyframes slideshow {
+      0%   { background-image: url('https://images.pexels.com/photos/19550805/pexels-photo-19550805.jpeg'); }
+      25%  { background-image: url('https://images.pexels.com/photos/7282695/pexels-photo-7282695.jpeg'); }
+      50%  { background-image: url('https://images.pexels.com/photos/51953/mother-daughter-love-sunset-51953.jpeg'); }
+      75%  { background-image: url('https://images.pexels.com/photos/265987/pexels-photo-265987.jpeg'); }
+      100% { background-image: url('https://images.pexels.com/photos/5982382/pexels-photo-5982382.jpeg'); }
+    }
+
+    .overlay {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(2px);
+      background-color: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .chat-container {
+      background-color: #1e1e1e;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    }
+
+    h1 {
+      font-family: 'Segoe UI', sans-serif;
+      color: #ffffff;
+      font-size: 1.8rem; /* reduced font size */
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    #chat-box {
+      background-color: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 1rem;
+      width: 100%;
+      height: 60vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      scroll-behavior: smooth;
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      margin: 0.5rem 0;
+      padding: 0.75rem 1rem;
+      border-radius: 18px;
+      max-width: 80%;
+      word-wrap: break-word;
+      line-height: 1.4;
+      opacity: 0;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .user {
+      background: linear-gradient(to right, #f48fb1, #f06292);
+      color: #000;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
+    }
+
+    .bot {
+      background: linear-gradient(to right, #90caf9, #42a5f5);
+      color: #000;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
+    }
+
+    #input-box {
+      display: flex;
+      width: 100%;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 25px;
+      background-color: #3a3a3a;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    #user-input::placeholder {
+      color: #aaa;
+      font-style: italic;
+    }
+
+    button {
+      padding: 0.75rem 1.25rem;
+      margin-left: 0.5rem;
+      border: none;
+      background-color: #f06292;
+      color: white;
+      font-size: 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #ec407a;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      #chat-box {
+        height: 55vh;
+      }
+
+      #user-input, button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="chat-container">
+      <h1>MATERNAL HEALTH CHATBOT</h1>
+      <div id="chat-box"></div>
+      <div id="input-box">
+        <input type="text" id="user-input" placeholder="e.g.,  I felt the baby move today..." autofocus />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const inputField = document.getElementById("user-input");
+      const chatBox = document.getElementById("chat-box");
+      const userText = inputField.value.trim();
+
+      if (!userText) {
+        inputField.placeholder = "Please type something meaningful!";
+        return;
+      }
+
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.textContent = userText;
+      chatBox.appendChild(userMsg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      inputField.value = "";
+      inputField.focus();
+
+      const typing = document.createElement("div");
+      typing.className = "message bot";
+      typing.id = "typing-indicator";
+      typing.textContent = "🤖 Typing...";
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: userText })
+        });
+
+        const data = await res.json();
+        chatBox.removeChild(typing);
+
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.textContent = data.reply;
+        chatBox.appendChild(botMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        chatBox.removeChild(typing);
+        const errMsg = document.createElement("div");
+        errMsg.className = "message bot";
+        errMsg.textContent = "⚠️ Something went wrong. Please try again.";
+        chatBox.appendChild(errMsg);
+      }
+    }
+
+    document.getElementById("user-input").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
